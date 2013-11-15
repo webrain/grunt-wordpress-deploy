@@ -1,15 +1,14 @@
 /*
- * grunt-deployments
- * https://github.com/getdave/grunt-deployments
+ * grunt-wordpress-deploy
+ * https://github.com/webrain/grunt-wordpress-deploy
  *
- * Copyright (c) 2013 David Smith
+ * Copyright (c) 2013 Webrain
  * Licensed under the MIT license.
  */
 
 'use strict';
 
 module.exports = function(grunt) {
-
 
   // Project configuration.
   grunt.initConfig({
@@ -43,9 +42,7 @@ module.exports = function(grunt) {
     nodeunit: {
       tests: ['test/*_test.js'],
     },
-
   });
-
 
   // Actually load this plugin's task(s).
   grunt.loadTasks('tasks');
@@ -61,5 +58,4 @@ module.exports = function(grunt) {
 
   // By default, lint and run all tests.
   grunt.registerTask('default', ['jshint', 'test']);
-
 };
