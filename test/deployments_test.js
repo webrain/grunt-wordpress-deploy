@@ -1,26 +1,5 @@
 'use strict';
 var grunt = require('grunt');
-
-/*
-  ======== A Handy Little Nodeunit Reference ========
-  https://github.com/caolan/nodeunit
-
-  Test methods:
-    test.expect(numAssertions)
-    test.done()
-  Test assertions:
-    test.ok(value, [message])
-    test.equal(actual, expected, [message])
-    test.notEqual(actual, expected, [message])
-    test.deepEqual(actual, expected, [message])
-    test.notDeepEqual(actual, expected, [message])
-    test.strictEqual(actual, expected, [message])
-    test.notStrictEqual(actual, expected, [message])
-    test.throws(block, [error], [message])
-    test.doesNotThrow(block, [error], [message])
-    test.ifError(value)
-*/
-
 var util = require('../tasks/lib/util.js').init(grunt);
 
 module.exports = {
@@ -81,6 +60,38 @@ module.exports = {
     test.done();
   },
 
+  rsync_push_cmd: function(test) {
+    test.expect(1);
+
+    var config = {
+      ssh_host: '127.0.0.1',
+      from: '/htdocs/test',
+      to: '/var/www/test',
+      rsync_args: '--verbose --progress'
+    };
+
+    var cmd1 = util.rsync_push_cmd(config);
+    test.equal(cmd1, "rsync --verbose --progress -e 'ssh 127.0.0.1' --exclude .sass-cache --exclude .git --exclude bin --exclude 'tmp/*' --exclude 'wp-content/*.sql' --exclude wp-config.php --exclude composer.phar --exclude 'wp-content/*' /htdocs/test :/var/www/test", 'Push files to remote host with rsync.');
+
+    test.done();
+  },
+
+  rsync_pull_cmd: function(test) {
+    test.expect(1);
+
+    var config = {
+      ssh_host: '127.0.0.1',
+      from: '/var/www/test',
+      to: '/htdocs/test',
+      rsync_args: '--verbose --progress'
+    };
+
+    var cmd1 = util.rsync_pull_cmd(config);
+    test.equal(cmd1, "rsync --verbose --progress -e 'ssh 127.0.0.1' --exclude .sass-cache --exclude .git --exclude bin --exclude 'tmp/*' --exclude 'wp-content/*.sql' --exclude wp-config.php --exclude composer.phar --exclude 'wp-content/*' /var/www/test :/htdocs/test", 'Pull files from remote host with rsync.');
+
+    test.done();
+  },
+
   generate_backup_paths: function(test) {
     test.expect(1);
 
@@ -99,6 +110,17 @@ module.exports = {
     };
 
     test.deepEqual(actual, expected, 'Generate backup paths');
+
+    test.done();
+  },
+
+  compose_rsync_options: function(test) {
+    test.expect(1);
+
+    var options = ['--verbose', '--progress'];
+    var string1 = util.compose_rsync_options(options);
+
+    test.equal(string1, '--verbose --progress', "Compose a valid option string from array.");
 
     test.done();
   }

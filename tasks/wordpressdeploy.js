@@ -9,7 +9,7 @@
 'use strict';
 
 var grunt = require('grunt');
-var util = require('../tasks/lib/util.js').init(grunt);
+var util  = require('../tasks/lib/util.js').init(grunt);
 
 module.exports = function(grunt) {
 
@@ -17,7 +17,7 @@ module.exports = function(grunt) {
    * DB PUSH
    * pushes local database to remote database
    */
-  grunt.registerTask('db_push', 'Push to Database', function() {
+  grunt.registerTask('push_db', 'Push to Database', function() {
 
     var task_options    = grunt.config.get('wordpressdeploy')['options'];
 
@@ -56,7 +56,7 @@ module.exports = function(grunt) {
    * DB PULL
    * pulls remote database into local database
    */
-  grunt.registerTask('db_pull', 'Pull from Database', function() {
+  grunt.registerTask('pull_db', 'Pull from Database', function() {
 
     var task_options = grunt.config.get('wordpressdeploy')['options'];
     var target       = grunt.option('target') || task_options['target'];
@@ -88,5 +88,60 @@ module.exports = function(grunt) {
     util.db_import(local_options,target_backup_paths.file);
 
     grunt.log.subhead("Operations completed");
+  });
+
+  /**
+   * Push files
+   * Sync all local files with the remote location
+   */
+  grunt.registerTask("push_files", "Transfer files to a remote host with rsync.", function () {
+
+    var task_options = grunt.config.get('wordpressdeploy')['options'];
+    var target       = grunt.option('target') || task_options['target'];
+
+    if ( typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined")  {
+      grunt.fail.warn("Invalid target provided. I cannot push files from nowhere! Please checked your configuration and provide a valid target.", 6);
+    }
+
+    // Grab the options
+    var target_options      = grunt.config.get('wordpressdeploy')[target];
+    var local_options       = grunt.config.get('wordpressdeploy').local;
+
+    var config = {
+      rsync_args: task_options.rsync_args.join(' '),
+      ssh_host: target_options.ssh_host,
+      from: local_options.path,
+      to: target_options.path
+    };
+
+    util.rsync_push(config);
+  });
+
+  /**
+   * Pull files
+   * Sync all target files with the local location
+   */
+  grunt.registerTask("pull_files", "Transfer files to a remote host with rsync.", function () {
+
+    var task_options = grunt.config.get('wordpressdeploy')['options'];
+    var target       = grunt.option('target') || task_options['target'];
+
+    if ( typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined")  {
+      grunt.fail.warn("Invalid target provided. I cannot push files from nowhere! Please checked your configuration and provide a valid target.", 6);
+    }
+
+    // Grab the options
+    var target_options      = grunt.config.get('wordpressdeploy')[target];
+    var local_options       = grunt.config.get('wordpressdeploy').local;
+    var rsync_args = util.compose_rsync_options(task_options.rsync_args);
+
+    var config = {
+      rsync_args: rsync_args,
+      ssh_host: target_options.ssh_host,
+      from: target_options.path,
+      to: local_options.path
+    };
+
+    util.rsync_pull(config);
   });
 };

@@ -27,6 +27,18 @@ exports.init = function (grunt) {
     grunt.log.oklns("Database imported succesfully");
   };
 
+  exports.rsync_push = function(config) {
+    grunt.log.writeln("Syncing data from '" + config.from + "' to '" + config.to + "' with rsync.");
+    shell.exec(exports.rsync_push_cmd(config));
+    grunt.log.oklns("Sync completed successfully.");
+  };
+
+  exports.rsync_pull = function(config) {
+    grunt.log.writeln("Syncing data from '" + config.from + "' to '" + config.to + "' with rsync.");
+    shell.exec(exports.rsync_pull_cmd(config));
+    grunt.log.oklns("Sync completed successfully.");
+  };
+
   exports.generate_backup_paths = function(target, task_options) {
 
     var backups_dir = task_options['backups_dir'] || "backups";
@@ -46,6 +58,12 @@ exports.init = function (grunt) {
       dir: directory,
       file: filepath
     };
+  };
+
+  exports.compose_rsync_options = function(options) {
+    var args = options.join(' ');
+
+    return args;
   };
 
   /* Commands generators */
@@ -113,11 +131,38 @@ exports.init = function (grunt) {
     return cmd;
   };
 
+  exports.rsync_push_cmd = function(config) {
+    var cmd = grunt.template.process(tpls.rsync, {
+      data: {
+        rsync_args: config.rsync_args,
+        ssh_host: config.ssh_host,
+        from: config.from,
+        to: config.to
+      }
+    });
+
+    return cmd;
+  };
+
+  exports.rsync_pull_cmd = function(config) {
+    var cmd = grunt.template.process(tpls.rsync, {
+      data: {
+        rsync_args: config.rsync_args,
+        ssh_host: config.ssh_host,
+        from: config.from,
+        to: config.to
+      }
+    });
+
+    return cmd;
+  };
+
   var tpls = {
     backup_path: "<%= backups_dir %>/<%= env %>/<%= date %>/<%= time %>",
     search_replace: "sed -i '' 's#<%= search %>#<%= replace %>#g' <%= path %>",
     mysqldump: "mysqldump -h <%= host %> -u<%= user %> -p<%= pass %> <%= database %>",
     mysql: "mysql -h <%= host %> -u <%= user %> -p<%= pass %> <%= database %>",
+    rsync: "rsync <%= rsync_args %> -e 'ssh <%= ssh_host %>' --exclude .sass-cache --exclude .git --exclude bin --exclude 'tmp/*' --exclude 'wp-content/*.sql' --exclude wp-config.php --exclude composer.phar --exclude 'wp-content/*' <%= from %> :<%= to %>",
     ssh: "ssh <%= host %>",
   };
 

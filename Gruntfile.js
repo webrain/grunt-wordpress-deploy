@@ -27,7 +27,27 @@ module.exports = function(grunt) {
 
     wordpressdeploy: {
       options: {
-        backups_dir: 'backups_dir/'
+        backups_dir: 'backups_dir/',
+        rsync_args: ['--verbose', '--progress', '-rlpt', '--compress', '--omit-dir-times', '--delete']
+      },
+      local: {
+        title: 'local',
+        database: 'db_local',
+        user: 'user_local',
+        pass: 'pass_local',
+        host: 'host_local',
+        url: 'url_local',
+        path: 'path_local'
+      },
+      production: {
+        title: 'staging',
+        database: 'db_staging',
+        user: 'user_staging',
+        pass: 'pass_staging',
+        host: 'host_staging',
+        url: 'url_staging',
+        path: 'path_staging',
+        ssh_host: 'ssh_staging'
       }
     },
 
