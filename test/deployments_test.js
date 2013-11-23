@@ -1,40 +1,87 @@
 'use strict';
 var grunt = require('grunt');
-
-/*
-  ======== A Handy Little Nodeunit Reference ========
-  https://github.com/caolan/nodeunit
-
-  Test methods:
-    test.expect(numAssertions)
-    test.done()
-  Test assertions:
-    test.ok(value, [message])
-    test.equal(actual, expected, [message])
-    test.notEqual(actual, expected, [message])
-    test.deepEqual(actual, expected, [message])
-    test.notDeepEqual(actual, expected, [message])
-    test.strictEqual(actual, expected, [message])
-    test.notStrictEqual(actual, expected, [message])
-    test.throws(block, [error], [message])
-    test.doesNotThrow(block, [error], [message])
-    test.ifError(value)
-*/
-
 var util = require('../tasks/lib/util.js').init(grunt);
 
 module.exports = {
-  replace_cmd: function(test) {
+  replace_urls: function(test) {
+    test.expect(2);
+
+    var search = 'http://loremipsum';
+    var replace = 'http://www.loremipsum.com';
+
+    var string1 = '';
+    test.equal(
+      util.replace_urls(search, replace, string1),
+      '',
+      "Replacing a blank line will return the blank line."
+    );
+
+    var string2 = '{s:19:"payment_success_url";s:37:"http://loremipsum/payment-successful/";}http://loremipsum/hb';
+    test.equal(
+      util.replace_urls(search, replace, string2),
+      '{s:19:"payment_success_url";s:45:"http://www.loremipsum.com/payment-successful/";}http://www.loremipsum.com/hb',
+      "Replacing a mixes string, serialized or not."
+    );
+
+    test.done();
+  },
+
+  replace_urls_in_serialized: function(test) {
     test.expect(3);
 
-    var cmd1 = util.replace_cmd('http://example.com', 'http://ex2.com', '/tmp');
-    test.equal(cmd1, "sed -i '' 's#http://example.com#http://ex2.com#g' /tmp", 'Create sed with common urls');
+    var search = 'http://loremipsum';
+    var replace = 'http://www.loremipsum.com';
 
-    var cmd2 = util.replace_cmd('http://example.com', 'ex2.com', '/tmp');
-    test.equal(cmd2, "sed -i '' 's#http://example.com#ex2.com#g' /tmp", 'Create sed with urls without http');
+    var string1 = '{s:19:"payment_success_url";s:37:"http---loremaaaam/payment-successful/";}';
+    test.equal(
+      util.replace_urls_in_serialized(search, replace, string1),
+      '{s:19:"payment_success_url";s:37:"http---loremaaaam/payment-successful/";}',
+      "Don't replace as this serialized data has no url inside."
+    );
 
-    var cmd3 = util.replace_cmd('example.com/', 'http://ex2.com', '/tmp/');
-    test.equal(cmd3, "sed -i '' 's#example.com/#http://ex2.com#g' /tmp/", 'Create sed with trailing slashes');
+    var string2 = '{s:19:"payment_success_url";s:37:"http://loremipsum/payment-successful/";}';
+    test.equal(
+      util.replace_urls_in_serialized(search, replace, string2),
+      '{s:19:"payment_success_url";s:45:"http://www.loremipsum.com/payment-successful/";}',
+      "Replace a single url into serialized data."
+    );
+
+    var string3 = '{s:19:"payment_success_url";s:37:"http://loremipsum/payment-successful/";s:16:"payment_fail_url";s:33:"http://loremipsum/payment-failed/";s:13:"currency_unit"}';
+    test.equal(
+      util.replace_urls_in_serialized(search, replace, string3),
+      '{s:19:"payment_success_url";s:45:"http://www.loremipsum.com/payment-successful/";s:16:"payment_fail_url";s:41:"http://www.loremipsum.com/payment-failed/";s:13:"currency_unit"}',
+      "Replace multiple urls into serialized data."
+    );
+
+    test.done();
+  },
+
+  replace_urls_in_string: function(test) {
+    test.expect(3);
+
+    var search = 'http://loremipsum';
+    var replace = 'http://www.loremipsum.com';
+
+    var string1 = 'loremiremipsum';
+    test.equal(
+      util.replace_urls_in_string(search, replace, string1),
+      'loremiremipsum',
+      "No url found so no replace."
+    );
+
+    var string2 = 'http://loremipsum';
+    test.equal(
+      util.replace_urls_in_string(search, replace, string2),
+      'http://www.loremipsum.com',
+      "Replace an url into a string."
+    );
+
+    var string3 = 'dfvdsfsdhttp://loremipsumdbshf jshdbfghahttp://loremipsum/bhs/sdf';
+    test.equal(
+      util.replace_urls_in_string(search, replace, string3),
+      'dfvdsfsdhttp://www.loremipsum.comdbshf jshdbfghahttp://www.loremipsum.com/bhs/sdf',
+      "Replace multiple urls into a complex string."
+    );
 
     test.done();
   },
@@ -81,6 +128,40 @@ module.exports = {
     test.done();
   },
 
+  rsync_push_cmd: function(test) {
+    test.expect(1);
+
+    var config = {
+      ssh_host: '127.0.0.1',
+      from: '/htdocs/test',
+      to: '/var/www/test',
+      rsync_args: '--verbose --progress',
+      exclusions: "--exclude '.git/' --exclude 'composer.json'"
+    };
+
+    var cmd1 = util.rsync_push_cmd(config);
+    test.equal(cmd1, "rsync --verbose --progress -e 'ssh 127.0.0.1' --exclude '.git/' --exclude 'composer.json' /htdocs/test :/var/www/test", 'Push files to remote host with rsync.');
+
+    test.done();
+  },
+
+  rsync_pull_cmd: function(test) {
+    test.expect(1);
+
+    var config = {
+      ssh_host: '127.0.0.1',
+      from: '/var/www/test',
+      to: '/htdocs/test',
+      rsync_args: '--verbose --progress',
+      exclusions: "--exclude '.git/' --exclude 'composer.json'"
+    };
+
+    var cmd1 = util.rsync_pull_cmd(config);
+    test.equal(cmd1, "rsync --verbose --progress -e 'ssh 127.0.0.1' --exclude '.git/' --exclude 'composer.json' /var/www/test :/htdocs/test", 'Pull files from remote host with rsync.');
+
+    test.done();
+  },
+
   generate_backup_paths: function(test) {
     test.expect(1);
 
@@ -99,6 +180,28 @@ module.exports = {
     };
 
     test.deepEqual(actual, expected, 'Generate backup paths');
+
+    test.done();
+  },
+
+  compose_rsync_options: function(test) {
+    test.expect(1);
+
+    var options = ['--verbose', '--progress'];
+    var string1 = util.compose_rsync_options(options);
+
+    test.equal(string1, '--verbose --progress', "Compose a valid option string from array.");
+
+    test.done();
+  },
+
+  compose_rsync_exclusions: function(test) {
+    test.expect(1);
+
+    var exclusions = ['.git/', 'composer.json'];
+    var string1 = util.compose_rsync_exclusions(exclusions);
+
+    test.equal(string1, "--exclude '.git/' --exclude 'composer.json'", "Compose a the exclusions string from array.");
 
     test.done();
   }

@@ -29,7 +29,8 @@
     "test": "grunt test"
   },
   "dependencies": {
-    "shelljs": "~0.1.4"
+    "shelljs": "~0.1.4",
+    "line-reader": "~0.2.3"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.1.1",
