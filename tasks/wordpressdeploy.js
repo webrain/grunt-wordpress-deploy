@@ -41,7 +41,7 @@ module.exports = function(grunt) {
     util.db_dump(local_options, local_backup_paths);
 
     // Search and Replace database refs
-    util.db_replace(local_options.url, target_options.url, local_backup_paths.file);
+    util.db_adapt(local_options.url, target_options.url, local_backup_paths.file);
 
     // Dump target DB
     util.db_dump(target_options, target_backup_paths);
@@ -79,7 +79,7 @@ module.exports = function(grunt) {
     // Dump Target DB
     util.db_dump(target_options, target_backup_paths );
 
-    util.db_replace(target_options.url,local_options.url,target_backup_paths.file);
+    util.db_adapt(target_options.url,local_options.url,target_backup_paths.file);
 
     // Backup Local DB
     util.db_dump(local_options, local_backup_paths);
@@ -106,12 +106,15 @@ module.exports = function(grunt) {
     // Grab the options
     var target_options      = grunt.config.get('wordpressdeploy')[target];
     var local_options       = grunt.config.get('wordpressdeploy').local;
+    var rsync_args = util.compose_rsync_options(task_options.rsync_args);
+    var exclusions = util.compose_rsync_exclusions(task_options.exclusions);
 
     var config = {
       rsync_args: task_options.rsync_args.join(' '),
       ssh_host: target_options.ssh_host,
       from: local_options.path,
-      to: target_options.path
+      to: target_options.path,
+      exclusions: exclusions
     };
 
     util.rsync_push(config);
@@ -134,12 +137,14 @@ module.exports = function(grunt) {
     var target_options      = grunt.config.get('wordpressdeploy')[target];
     var local_options       = grunt.config.get('wordpressdeploy').local;
     var rsync_args = util.compose_rsync_options(task_options.rsync_args);
+    var exclusions = util.compose_rsync_exclusions(task_options.exclusions);
 
     var config = {
       rsync_args: rsync_args,
       ssh_host: target_options.ssh_host,
       from: target_options.path,
-      to: local_options.path
+      to: local_options.path,
+      exclusions: exclusions
     };
 
     util.rsync_pull(config);
