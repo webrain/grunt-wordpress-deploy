@@ -1,7 +1,7 @@
 {
   "name": "grunt-wordpress-deploy",
   "description": "Deploy Wordpress without pain using Grunt.",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "homepage": "https://github.com/webrain/grunt-wordpress-deploy",
   "author": {
     "name": "Dario Ghilardi",
