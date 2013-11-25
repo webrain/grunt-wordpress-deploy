@@ -4,7 +4,7 @@ var util = require('../tasks/lib/util.js').init(grunt);
 
 module.exports = {
   replace_urls: function(test) {
-    test.expect(2);
+    test.expect(3);
 
     var search = 'http://loremipsum';
     var replace = 'http://www.loremipsum.com';
@@ -20,7 +20,17 @@ module.exports = {
     test.equal(
       util.replace_urls(search, replace, string2),
       '{s:19:"payment_success_url";s:45:"http://www.loremipsum.com/payment-successful/";}http://www.loremipsum.com/hb',
-      "Replacing a mixes string, serialized or not."
+      "Replacing a mixed string, serialized or not."
+    );
+
+    search = 'http://loremipsum';
+    replace = 'http://loremipsum.loremipsum.com';
+
+    var string3 = '{s:19:"payment_success_url";s:37:"http://loremipsum/payment-successful/";}http://loremipsum.loremipsum.com/hb';
+    test.equal(
+      util.replace_urls(search, replace, string3),
+      '{s:19:"payment_success_url";s:52:"http://loremipsum.loremipsum.com/payment-successful/";}http://loremipsum.loremipsum.com/hb',
+      "Replacing a mixed string, serialized or not, with the source url contained into the replace url."
     );
 
     test.done();

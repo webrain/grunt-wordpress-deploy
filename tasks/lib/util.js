@@ -130,7 +130,8 @@ exports.init = function (grunt) {
   };
 
   exports.replace_urls_in_string = function (search, replace, string) {
-    return string.replace(new RegExp(search, 'g'), replace);
+    var regexp = new RegExp('(?!' + replace + ')(' + search + ')', 'g');
+    return string.replace(regexp, replace);
   };
 
   /* Commands generators */
