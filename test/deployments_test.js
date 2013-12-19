@@ -167,7 +167,7 @@ module.exports = {
     };
 
     var cmd1 = util.rsync_pull_cmd(config);
-    test.equal(cmd1, "rsync --verbose --progress -e 'ssh 127.0.0.1' --exclude '.git/' --exclude 'composer.json' /var/www/test :/htdocs/test", 'Pull files from remote host with rsync.');
+    test.equal(cmd1, "rsync --verbose --progress -e 'ssh 127.0.0.1' --exclude '.git/' --exclude 'composer.json' :/var/www/test /htdocs/test", 'Pull files from remote host with rsync.');
 
     test.done();
   },
