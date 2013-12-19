@@ -189,7 +189,7 @@ exports.init = function (grunt) {
   };
 
   exports.rsync_push_cmd = function(config) {
-    var cmd = grunt.template.process(tpls.rsync, {
+    var cmd = grunt.template.process(tpls.rsync_push, {
       data: {
         rsync_args: config.rsync_args,
         ssh_host: config.ssh_host,
@@ -203,7 +203,7 @@ exports.init = function (grunt) {
   };
 
   exports.rsync_pull_cmd = function(config) {
-    var cmd = grunt.template.process(tpls.rsync, {
+    var cmd = grunt.template.process(tpls.rsync_pull, {
       data: {
         rsync_args: config.rsync_args,
         ssh_host: config.ssh_host,
@@ -220,7 +220,8 @@ exports.init = function (grunt) {
     backup_path: "<%= backups_dir %>/<%= env %>/<%= date %>/<%= time %>",
     mysqldump: "mysqldump -h <%= host %> -u<%= user %> -p<%= pass %> <%= database %>",
     mysql: "mysql -h <%= host %> -u <%= user %> -p<%= pass %> <%= database %>",
-    rsync: "rsync <%= rsync_args %> -e 'ssh <%= ssh_host %>' <%= exclusions %> <%= from %> :<%= to %>",
+    rsync_push: "rsync <%= rsync_args %> --delete -e 'ssh <%= ssh_host %>' <%= exclusions %> <%= from %> :<%= to %>",
+    rsync_pull: "rsync <%= rsync_args %> -e 'ssh <%= ssh_host %>' <%= exclusions %> :<%= from %> <%= to %>",
     ssh: "ssh <%= host %>",
   };
 

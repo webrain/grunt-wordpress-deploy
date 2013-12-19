@@ -28,7 +28,7 @@ module.exports = function(grunt) {
     wordpressdeploy: {
       options: {
         backups_dir: 'backups_dir/',
-        rsync_args: ['--verbose', '--progress', '-rlpt', '--compress', '--omit-dir-times', '--delete'],
+        rsync_args: ['--verbose', '--progress', '-rlpt', '--compress', '--omit-dir-times'],
         exclusions: ['.git', 'tmp/*', 'backups_dir/', 'wp-config.php', 'composer.json', 'composer.lock']
       },
       local: {
