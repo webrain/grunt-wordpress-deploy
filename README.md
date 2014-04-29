@@ -176,6 +176,11 @@ Type: `String`
 
 Description: the hostname for the location in which the database resides.
 
+#### port
+Type: `Number`
+
+Description: the port for which mysql runs on. Leave out for the default `3306`
+
 #### url
 Type: `String`
 
