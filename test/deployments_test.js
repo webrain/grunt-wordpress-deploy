@@ -63,6 +63,13 @@ module.exports = {
       "Replace multiple urls into serialized data."
     );
 
+    var string4 = '{s:19:"payment_success_url";s:74:"http://loremipsum/payment-successful/ and http://loremipsum/error-message/";s:16:"payment_fail_url";s:33:"http://loremipsum/payment-failed/";s:13:"currency_unit"}';
+    test.equal(
+      util.replace_urls_in_serialized(search, replace, string4),
+      '{s:19:"payment_success_url";s:90:"http://www.loremipsum.com/payment-successful/ and http://www.loremipsum.com/error-message/";s:16:"payment_fail_url";s:41:"http://www.loremipsum.com/payment-failed/";s:13:"currency_unit"}',
+      "Replace multiple urls in a single serialized object into serialized data."
+    );
+
     test.done();
   },
 
