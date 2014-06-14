@@ -100,7 +100,7 @@ exports.init = function (grunt) {
 
   exports.replace_urls_in_serialized = function(search, replace, string) {
     var length_delta = search.length - replace.length;
-    var searchRegExp = new RegExp(search, 'g');
+    var search_regexp = new RegExp(search, 'g');
 
     // Replace for serialized data
     var matches, length, delimiter, old_serialized_data, target_string, new_url, occurences;
@@ -112,12 +112,12 @@ exports.init = function (grunt) {
 
       // If the string contains the url make the substitution
       if (target_string.indexOf(search) !== -1) {
-        occurences = target_string.match(searchRegExp).length;
+        occurences = target_string.match(search_regexp).length;
         length = matches[1];
         delimiter = matches[2];
 
         // Replace the url
-        new_url = target_string.replace(searchRegExp, replace);
+        new_url = target_string.replace(search_regexp, replace);
         length -= length_delta * occurences;
 
         // Compose the new serialized data
