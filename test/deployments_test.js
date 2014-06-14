@@ -37,7 +37,7 @@ module.exports = {
   },
 
   replace_urls_in_serialized: function(test) {
-    test.expect(3);
+    test.expect(4);
 
     var search = 'http://loremipsum';
     var replace = 'http://www.loremipsum.com';
