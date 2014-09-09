@@ -108,18 +108,18 @@ module.exports = {
 
     var config = {
       user: 'john',
-      pass: 'pass',
+      pass: "pas(s))", 
       database: 'test',
       host: 'localhost'
     };
 
     var cmd1 = util.mysqldump_cmd(config);
-    test.equal(cmd1, "mysqldump -h localhost -ujohn -ppass test", 'Local mysqldump command.');
+    test.equal(cmd1, "mysqldump -h localhost -ujohn -ppas\\(s\\)\\) test", 'Local mysqldump command.');
 
     config.ssh_host = '127.0.0.1';
 
     var cmd2 = util.mysqldump_cmd(config);
-    test.equal(cmd2, "ssh 127.0.0.1 'mysqldump -h localhost -ujohn -ppass test'", 'SSH remote mysqldump command.');
+    test.equal(cmd2, "ssh 127.0.0.1 'mysqldump -h localhost -ujohn -ppas\\(s\\)\\) test'", 'SSH remote mysqldump command.');
     test.done();
   },
 

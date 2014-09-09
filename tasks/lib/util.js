@@ -138,10 +138,14 @@ exports.init = function (grunt) {
 
   /* Commands generators */
   exports.mysqldump_cmd = function(config) {
+    function escape (str) {
+      return str.replace(/(\(|\))/g, "\\$1");
+    }
+
     var cmd = grunt.template.process(tpls.mysqldump, {
       data: {
         user: config.user,
-        pass: config.pass,
+        pass: escape(config.pass),
         database: config.database,
         host: config.host
       }
