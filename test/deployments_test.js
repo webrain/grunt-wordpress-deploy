@@ -129,19 +129,19 @@ module.exports = {
     var config = {
       host: 'localhost',
       user: 'john',
-      pass: 'pass',
+      pass: 'pas(s))',
       database: 'test',
     };
 
     var src = '/aaa/bbb';
 
     var cmd1 = util.mysql_cmd(config, src);
-    test.equal(cmd1, "mysql -h localhost -u john -ppass test < /aaa/bbb", 'Local Mysql import command.');
+    test.equal(cmd1, "mysql -h localhost -u john -ppas\\(s\\)\\) test < /aaa/bbb", 'Local Mysql import command.');
 
     config.ssh_host = '127.0.0.1';
 
     var cmd2 = util.mysql_cmd(config, src);
-    test.equal(cmd2, "ssh 127.0.0.1 'mysql -h localhost -u john -ppass test' < /aaa/bbb", 'Remote Mysql import command.');
+    test.equal(cmd2, "ssh 127.0.0.1 'mysql -h localhost -u john -ppas\\(s\\)\\) test' < /aaa/bbb", 'Remote Mysql import command.');
     test.done();
   },
 
