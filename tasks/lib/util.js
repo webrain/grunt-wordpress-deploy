@@ -87,6 +87,7 @@ exports.init = function (grunt) {
     var content = grunt.file.read(file);
 
     var output = exports.replace_urls(old_url, new_url, content);
+    output = exports.remove_password_warning(output);
 
     grunt.file.write(file, output);
   };
@@ -136,12 +137,24 @@ exports.init = function (grunt) {
     return string.replace(regexp, replace);
   };
 
+  exports.remove_password_warning = function (string) {
+    var splitStr = string.split("\n");
+    if (splitStr[0].indexOf("Warning: Using a password on the command line interface can be insecure.") != -1) {
+      return splitStr.slice(1).join("\n");
+    } else {return string};
+  };
+
+  function escape (str) {
+      return str.replace(/(\(|\))/g, "\\$1");
+  }
+
   /* Commands generators */
   exports.mysqldump_cmd = function(config) {
+
     var cmd = grunt.template.process(tpls.mysqldump, {
       data: {
         user: config.user,
-        pass: config.pass,
+        pass: escape(config.pass),
         database: config.database,
         host: config.host
       }
@@ -167,7 +180,7 @@ exports.init = function (grunt) {
       data: {
         host: config.host,
         user: config.user,
-        pass: config.pass,
+        pass: escape(config.pass),
         database: config.database,
         path: src
       }

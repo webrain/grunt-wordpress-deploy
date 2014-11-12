@@ -103,23 +103,34 @@ module.exports = {
     test.done();
   },
 
+  remove_password_warning: function(test) {
+    test.expect(1);
+    var warningStr = "Warning: Using a password on the command line interface can be insecure." + "\n" 
+    + "-- MySQL dump 10.13  Distrib 5.6.17, for Linux (x86_64)" + "\n" 
+    + "yet another test string";
+    test.equal(util.remove_password_warning(warningStr),
+      "-- MySQL dump 10.13  Distrib 5.6.17, for Linux (x86_64)" + "\n" 
+    + "yet another test string");
+    test.done();
+  },
+
   mysqldump_cmd: function(test) {
     test.expect(2);
 
     var config = {
       user: 'john',
-      pass: 'pass',
+      pass: "pas(s))", 
       database: 'test',
       host: 'localhost'
     };
 
     var cmd1 = util.mysqldump_cmd(config);
-    test.equal(cmd1, "mysqldump -h localhost -ujohn -ppass test", 'Local mysqldump command.');
+    test.equal(cmd1, "mysqldump -h localhost -ujohn -ppas\\(s\\)\\) test", 'Local mysqldump command.');
 
     config.ssh_host = '127.0.0.1';
 
     var cmd2 = util.mysqldump_cmd(config);
-    test.equal(cmd2, "ssh 127.0.0.1 'mysqldump -h localhost -ujohn -ppass test'", 'SSH remote mysqldump command.');
+    test.equal(cmd2, "ssh 127.0.0.1 'mysqldump -h localhost -ujohn -ppas\\(s\\)\\) test'", 'SSH remote mysqldump command.');
     test.done();
   },
 
@@ -129,19 +140,19 @@ module.exports = {
     var config = {
       host: 'localhost',
       user: 'john',
-      pass: 'pass',
+      pass: 'pas(s))',
       database: 'test',
     };
 
     var src = '/aaa/bbb';
 
     var cmd1 = util.mysql_cmd(config, src);
-    test.equal(cmd1, "mysql -h localhost -u john -ppass test < /aaa/bbb", 'Local Mysql import command.');
+    test.equal(cmd1, "mysql -h localhost -u john -ppas\\(s\\)\\) test < /aaa/bbb", 'Local Mysql import command.');
 
     config.ssh_host = '127.0.0.1';
 
     var cmd2 = util.mysql_cmd(config, src);
-    test.equal(cmd2, "ssh 127.0.0.1 'mysql -h localhost -u john -ppass test' < /aaa/bbb", 'Remote Mysql import command.');
+    test.equal(cmd2, "ssh 127.0.0.1 'mysql -h localhost -u john -ppas\\(s\\)\\) test' < /aaa/bbb", 'Remote Mysql import command.');
     test.done();
   },
 
