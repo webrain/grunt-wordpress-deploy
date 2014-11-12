@@ -87,6 +87,7 @@ exports.init = function (grunt) {
     var content = grunt.file.read(file);
 
     var output = exports.replace_urls(old_url, new_url, content);
+    output = exports.remove_password_warning(output);
 
     grunt.file.write(file, output);
   };
@@ -134,6 +135,13 @@ exports.init = function (grunt) {
   exports.replace_urls_in_string = function (search, replace, string) {
     var regexp = new RegExp('(?!' + replace + ')(' + search + ')', 'g');
     return string.replace(regexp, replace);
+  };
+
+  exports.remove_password_warning = function (string) {
+    var splitStr = string.split("\n");
+    if (splitStr[0].indexOf("Warning: Using a password on the command line interface can be insecure.") != -1) {
+      return splitStr.slice(1).join("\n");
+    } else {return string};
   };
 
   function escape (str) {

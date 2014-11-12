@@ -103,6 +103,17 @@ module.exports = {
     test.done();
   },
 
+  remove_password_warning: function(test) {
+    test.expect(1);
+    var warningStr = "Warning: Using a password on the command line interface can be insecure." + "\n" 
+    + "-- MySQL dump 10.13  Distrib 5.6.17, for Linux (x86_64)" + "\n" 
+    + "yet another test string";
+    test.equal(util.remove_password_warning(warningStr),
+      "-- MySQL dump 10.13  Distrib 5.6.17, for Linux (x86_64)" + "\n" 
+    + "yet another test string");
+    test.done();
+  },
+
   mysqldump_cmd: function(test) {
     test.expect(2);
 
