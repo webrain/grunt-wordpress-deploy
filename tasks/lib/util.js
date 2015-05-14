@@ -82,15 +82,20 @@ exports.init = function (grunt) {
     return exclusions;
   };
 
-  exports.db_adapt = function(old_url, new_url, file) {
+  exports.db_adapt = function(old_url, new_url, file, fn_custom_filter) {
 
     var content = grunt.file.read(file);
- 
+
     grunt.log.oklns("Trim warnings from SQL dump.");
-	content = exports.trim_warnings_from_sql_dump(content);
+    content = exports.trim_warnings_from_sql_dump(content);
 
     grunt.log.oklns("Adapt the database: set the correct urls for the destination in the database.");
     var output = exports.replace_urls(old_url, new_url, content);
+
+    if (fn_custom_filter) {
+      grunt.log.oklns("Applying custom filter to database.");
+      output = fn_custom_filter(output);
+    }
 
     grunt.file.write(file, output);
   };
