@@ -42,6 +42,17 @@ exports.init = function (grunt) {
     grunt.log.oklns("Sync completed successfully.");
   };
 
+    exports.rsync_dump = function (config) {
+        grunt.log.oklns("Dumping data from '" + config.from + "' to '" + config.to + "' with rsync.");
+
+        var cmd = exports.rsync_dump_cmd(config);
+        grunt.log.writeln(cmd);
+
+        shell.exec(cmd);
+
+        grunt.log.oklns("Sync completed successfully.");
+    };
+
   exports.generate_backup_paths = function(target, task_options) {
 
     var backups_dir = task_options['backups_dir'] || "backups";
@@ -218,10 +229,24 @@ exports.init = function (grunt) {
     return cmd;
   };
 
+    exports.rsync_dump_cmd = function (config) {
+        var cmd = grunt.template.process(tpls.rsync_dump, {
+            data: {
+                rsync_args: config.rsync_args,
+                from: config.from,
+                to: config.to,
+                exclusions: config.exclusions
+            }
+        });
+
+        return cmd;
+    };
+
   var tpls = {
     backup_path: "<%= backups_dir %>/<%= env %>/<%= date %>/<%= time %>",
     mysqldump: "mysqldump -h <%= host %> -u<%= user %> -p<%= pass %> <%= database %>",
     mysql: "mysql -h <%= host %> -u <%= user %> -p<%= pass %> <%= database %>",
+    rsync_dump: "rsync <%= rsync_args %> --delete <%= exclusions %> <%= from %> <%= to %>",
     rsync_push: "rsync <%= rsync_args %> --delete -e 'ssh <%= ssh_host %>' <%= exclusions %> <%= from %> :<%= to %>",
     rsync_pull: "rsync <%= rsync_args %> -e 'ssh <%= ssh_host %>' <%= exclusions %> :<%= from %> <%= to %>",
     ssh: "ssh <%= host %>",

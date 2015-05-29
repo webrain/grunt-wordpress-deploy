@@ -13,6 +13,71 @@ var util  = require('../tasks/lib/util.js').init(grunt);
 
 module.exports = function(grunt) {
 
+    /**
+     * DB DUMP
+     * dumps local database
+     */
+    grunt.registerTask('dump_db', 'Dumping Database', function () {
+        var task_options = grunt.config.get('wordpressdeploy')['options'];
+
+        var target = grunt.option('target') || task_options['target'];
+
+        if (typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined") {
+            grunt.fail.warn("Invalid target specified. Did you pass the wrong argument? Please check your task configuration.", 6);
+        }
+
+        // Grab the options
+        var target_options = grunt.config.get('wordpressdeploy')[target];
+        var local_options = grunt.config.get('wordpressdeploy').local;
+
+        // Generate required backup directories and paths
+        var dump_path = {
+            dir: target_options.path,
+            file: target_options.path+'_db_dump.sql'
+        };
+
+        grunt.log.subhead("Dumping database from 'Local' to '" + dump_path.dir + "'");
+
+        // Dump local DB
+        util.db_dump(local_options, dump_path);
+
+        // Search and Replace database refs
+        util.db_adapt(local_options.url, target_options.url, dump_path.file);
+
+        grunt.log.subhead("Operations completed");
+
+    });
+
+    /**
+     * DB FILES
+     * dumps local files
+     */
+    grunt.registerTask("dump_files", "Dump files with rsync.", function () {
+
+        var task_options = grunt.config.get('wordpressdeploy')['options'];
+        var target = grunt.option('target') || task_options['target'];
+
+        if (typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined") {
+            grunt.fail.warn("Invalid target provided. I cannot push files from nowhere! Please checked your configuration and provide a valid target.", 6);
+        }
+
+        // Grab the options
+        var target_options = grunt.config.get('wordpressdeploy')[target];
+        var local_options = grunt.config.get('wordpressdeploy').local;
+        var rsync_args = util.compose_rsync_options(task_options.rsync_args);
+        var exclusions = util.compose_rsync_exclusions(task_options.exclusions);
+
+        var config = {
+            rsync_args: task_options.rsync_args.join(' '),
+            from: local_options.path,
+            to: target_options.path,
+            exclusions: exclusions
+        };
+
+        util.rsync_dump(config);
+
+        grunt.log.subhead("Operations completed");
+    });
   /**
    * DB PUSH
    * pushes local database to remote database
