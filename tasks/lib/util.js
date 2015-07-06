@@ -83,25 +83,17 @@ exports.init = function (grunt) {
   };
 
   exports.db_adapt = function(old_url, new_url, file, fn_custom_filter) {
-
+    grunt.log.oklns("Adapt the database: set the correct urls for the destination in the database.");
     var content = grunt.file.read(file);
 
-    grunt.log.oklns("Trim warnings from SQL dump.");
-    content = exports.trim_warnings_from_sql_dump(content);
-
-    grunt.log.oklns("Adapt the database: set the correct urls for the destination in the database.");
     var output = exports.replace_urls(old_url, new_url, content);
-
+    
     if (fn_custom_filter) {
       grunt.log.oklns("Applying custom filter to database.");
       output = fn_custom_filter(output);
     }
-
+    
     grunt.file.write(file, output);
-  };
-
-  exports.trim_warnings_from_sql_dump = function (sql_dump) {
-    return sql_dump.replace(/^Warning.*\n?/gm, '');
   };
 
   exports.replace_urls = function(search, replace, content) {
@@ -113,9 +105,10 @@ exports.init = function (grunt) {
 
   exports.replace_urls_in_serialized = function(search, replace, string) {
     var length_delta = search.length - replace.length;
+    var search_regexp = new RegExp(search, 'g');
 
     // Replace for serialized data
-    var matches, length, delimiter, old_serialized_data, target_string, new_url;
+    var matches, length, delimiter, old_serialized_data, target_string, new_url, occurences;
     var regexp = /s:(\d+):([\\]*['"])(.*?)\2;/g;
 
     while (matches = regexp.exec(string)) {
@@ -124,12 +117,13 @@ exports.init = function (grunt) {
 
       // If the string contains the url make the substitution
       if (target_string.indexOf(search) !== -1) {
+        occurences = target_string.match(search_regexp).length;
         length = matches[1];
         delimiter = matches[2];
 
         // Replace the url
-        new_url = target_string.replace(search, replace);
-        length -= length_delta;
+        new_url = target_string.replace(search_regexp, replace);
+        length -= length_delta * occurences;
 
         // Compose the new serialized data
         var new_serialized_data = 's:' + length + ':' + delimiter + new_url + delimiter + ';';
