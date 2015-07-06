@@ -41,7 +41,7 @@ module.exports = function(grunt) {
     util.db_dump(local_options, local_backup_paths);
 
     // Search and Replace database refs
-    util.db_adapt(local_options.url, target_options.url, local_backup_paths.file);
+    util.db_adapt(local_options.url, target_options.url, local_backup_paths.file, target_options.filter);
 
     // Dump target DB
     util.db_dump(target_options, target_backup_paths);
@@ -79,7 +79,7 @@ module.exports = function(grunt) {
     // Dump Target DB
     util.db_dump(target_options, target_backup_paths );
 
-    util.db_adapt(target_options.url,local_options.url,target_backup_paths.file);
+    util.db_adapt(target_options.url,local_options.url,target_backup_paths.file, local_options.filter);
 
     // Backup Local DB
     util.db_dump(local_options, local_backup_paths);
