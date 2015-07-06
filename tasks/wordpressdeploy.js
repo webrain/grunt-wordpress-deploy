@@ -1,235 +1,152 @@
+/*
+ * grunt-wordpress-deploy
+ * https://github.com/webrain/grunt-wordpress-deploy
+ *
+ * Copyright (c) 2013 Webrain
+ * Licensed under the MIT license.
+ */
+
 'use strict';
 
-exports.init = function (grunt) {
-  var shell = require('shelljs');
-  var lineReader = require("line-reader");
+var grunt = require('grunt');
+var util  = require('../tasks/lib/util.js').init(grunt);
 
-  var exports = {};
+module.exports = function(grunt) {
 
-  exports.db_dump = function(config, output_paths) {
-    grunt.file.mkdir(output_paths.dir);
+  /**
+   * DB PUSH
+   * pushes local database to remote database
+   */
+  grunt.registerTask('push_db', 'Push to Database', function() {
 
-    var cmd = exports.mysqldump_cmd(config);
+    var task_options    = grunt.config.get('wordpressdeploy')['options'];
 
-    var output = shell.exec(cmd, {silent: true}).output;
+    var target = grunt.option('target') || task_options['target'];
 
-    grunt.file.write(output_paths.file, output);
-    grunt.log.oklns("Database DUMP succesfully exported to: " + output_paths.file);
-  };
+    if ( typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined")  {
+      grunt.fail.warn("Invalid target specified. Did you pass the wrong argument? Please check your task configuration.", 6);
+    }
 
-  exports.db_import = function(config, src) {
-    shell.exec(exports.mysql_cmd(config, src));
-    grunt.log.oklns("Database imported succesfully");
-  };
+    // Grab the options
+    var target_options      = grunt.config.get('wordpressdeploy')[target];
+    var local_options       = grunt.config.get('wordpressdeploy').local;
 
-  exports.rsync_push = function(config) {
-    grunt.log.oklns("Syncing data from '" + config.from + "' to '" + config.to + "' with rsync.");
+    // Generate required backup directories and paths
+    var local_backup_paths  = util.generate_backup_paths("local", task_options);
+    var target_backup_paths = util.generate_backup_paths(target, task_options);
 
-    var cmd = exports.rsync_push_cmd(config);
-    grunt.log.writeln(cmd);
+    grunt.log.subhead("Pushing database from 'Local' to '" + target_options.title + "'");
 
-    shell.exec(cmd);
+    // Dump local DB
+    util.db_dump(local_options, local_backup_paths);
 
-    grunt.log.oklns("Sync completed successfully.");
-  };
+    // Search and Replace database refs
+    util.db_adapt(local_options.url, target_options.url, local_backup_paths.file, target_options.filter);
 
-  exports.rsync_pull = function(config) {
-    grunt.log.oklns("Syncing data from '" + config.from + "' to '" + config.to + "' with rsync.");
+    // Dump target DB
+    util.db_dump(target_options, target_backup_paths);
 
-    var cmd = exports.rsync_pull_cmd(config);
-    shell.exec(cmd);
+    // Import dump to target DB
+    util.db_import(target_options, local_backup_paths.file);
 
-    grunt.log.oklns("Sync completed successfully.");
-  };
+    grunt.log.subhead("Operations completed");
+  });
 
-  exports.generate_backup_paths = function(target, task_options) {
+  /**
+   * DB PULL
+   * pulls remote database into local database
+   */
+  grunt.registerTask('pull_db', 'Pull from Database', function() {
 
-    var backups_dir = task_options['backups_dir'] || "backups";
+    var task_options = grunt.config.get('wordpressdeploy')['options'];
+    var target       = grunt.option('target') || task_options['target'];
 
-    var directory = grunt.template.process(tpls.backup_path, {
-      data: {
-        backups_dir: backups_dir,
-        env: target,
-        date: grunt.template.today('yyyymmdd'),
-        time: grunt.template.today('HH-MM-ss'),
-      }
-    });
+    if ( typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined")  {
+      grunt.fail.warn("Invalid target provided. I cannot pull a database from nowhere! Please checked your configuration and provide a valid target.", 6);
+    }
 
-    var filepath = directory + '/db_backup.sql';
+    // Grab the options
+    var target_options      = grunt.config.get('wordpressdeploy')[target];
+    var local_options       = grunt.config.get('wordpressdeploy').local;
 
-    return {
-      dir: directory,
-      file: filepath
+    // Generate required backup directories and paths
+    var local_backup_paths  = util.generate_backup_paths("local", task_options);
+    var target_backup_paths = util.generate_backup_paths(target, task_options);
+
+    // Start execution
+    grunt.log.subhead("Pulling database from '" + target_options.title + "' into Local");
+
+    // Dump Target DB
+    util.db_dump(target_options, target_backup_paths );
+
+    util.db_adapt(target_options.url,local_options.url,target_backup_paths.file, local_options.filter);
+
+    // Backup Local DB
+    util.db_dump(local_options, local_backup_paths);
+
+    // Import dump into Local
+    util.db_import(local_options,target_backup_paths.file);
+
+    grunt.log.subhead("Operations completed");
+  });
+
+  /**
+   * Push files
+   * Sync all local files with the remote location
+   */
+  grunt.registerTask("push_files", "Transfer files to a remote host with rsync.", function () {
+
+    var task_options = grunt.config.get('wordpressdeploy')['options'];
+    var target       = grunt.option('target') || task_options['target'];
+
+    if ( typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined")  {
+      grunt.fail.warn("Invalid target provided. I cannot push files from nowhere! Please checked your configuration and provide a valid target.", 6);
+    }
+
+    // Grab the options
+    var target_options      = grunt.config.get('wordpressdeploy')[target];
+    var local_options       = grunt.config.get('wordpressdeploy').local;
+    var rsync_args = util.compose_rsync_options(task_options.rsync_args);
+    var exclusions = util.compose_rsync_exclusions(task_options.exclusions);
+
+    var config = {
+      rsync_args: task_options.rsync_args.join(' '),
+      ssh_host: target_options.ssh_host,
+      from: local_options.path,
+      to: target_options.path,
+      exclusions: exclusions
     };
-  };
 
-  exports.compose_rsync_options = function(options) {
-    var args = options.join(' ');
+    util.rsync_push(config);
+  });
 
-    return args;
-  };
+  /**
+   * Pull files
+   * Sync all target files with the local location
+   */
+  grunt.registerTask("pull_files", "Transfer files to a remote host with rsync.", function () {
 
-  exports.compose_rsync_exclusions = function(options) {
-    var exclusions = '';
-    var i = 0;
+    var task_options = grunt.config.get('wordpressdeploy')['options'];
+    var target       = grunt.option('target') || task_options['target'];
 
-    for(i = 0;i < options.length; i++) {
-      exclusions += "--exclude '" + options[i] + "' ";
+    if ( typeof target === "undefined" || typeof grunt.config.get('wordpressdeploy')[target] === "undefined")  {
+      grunt.fail.warn("Invalid target provided. I cannot push files from nowhere! Please checked your configuration and provide a valid target.", 6);
     }
 
-    exclusions = exclusions.trim();
+    // Grab the options
+    var target_options      = grunt.config.get('wordpressdeploy')[target];
+    var local_options       = grunt.config.get('wordpressdeploy').local;
+    var rsync_args = util.compose_rsync_options(task_options.rsync_args);
+    var exclusions = util.compose_rsync_exclusions(task_options.exclusions);
 
-    return exclusions;
-  };
+    var config = {
+      rsync_args: rsync_args,
+      ssh_host: target_options.ssh_host,
+      from: target_options.path,
+      to: local_options.path,
+      exclusions: exclusions
+    };
 
-  exports.db_adapt = function(old_url, new_url, file, fn_custom_filter) {
-
-    var content = grunt.file.read(file);
-
-    grunt.log.oklns("Adapt the database: set the correct urls for the destination in the database.");
-    var output = exports.replace_urls(old_url, new_url, content);
-
-    if (fn_custom_filter) {
-      grunt.log.oklns("Applying custom filter to database.");
-      output = fn_custom_filter(output);
-    }
-
-    grunt.file.write(file, output);
-  };
-
-  exports.replace_urls = function(search, replace, content) {
-    content = exports.replace_urls_in_serialized(search, replace, content);
-    content = exports.replace_urls_in_string(search, replace, content);
-
-    return content;
-  };
-
-  exports.replace_urls_in_serialized = function(search, replace, string) {
-    var length_delta = search.length - replace.length;
-
-    // Replace for serialized data
-    var matches, length, delimiter, old_serialized_data, target_string, new_url;
-    var regexp = /s:(\d+):([\\]*['"])(.*?)\2;/g;
-
-    while (matches = regexp.exec(string)) {
-      old_serialized_data = matches[0];
-      target_string = matches[3];
-
-      // If the string contains the url make the substitution
-      if (target_string.indexOf(search) !== -1) {
-        length = matches[1];
-        delimiter = matches[2];
-
-        // Replace the url
-        new_url = target_string.replace(search, replace);
-        length -= length_delta;
-
-        // Compose the new serialized data
-        var new_serialized_data = 's:' + length + ':' + delimiter + new_url + delimiter + ';';
-
-        // Replace the new serialized data into the dump
-        string = string.replace(old_serialized_data, new_serialized_data);
-      }
-    }
-
-    return string;
-  };
-
-  exports.replace_urls_in_string = function (search, replace, string) {
-    var regexp = new RegExp('(?!' + replace + ')(' + search + ')', 'g');
-    return string.replace(regexp, replace);
-  };
-
-  /* Commands generators */
-  exports.mysqldump_cmd = function(config) {
-    var cmd = grunt.template.process(tpls.mysqldump, {
-      data: {
-        user: config.user,
-        pass: config.pass,
-        database: config.database,
-        host: config.host
-      }
-    });
-
-    if (typeof config.ssh_host === "undefined") {
-      grunt.log.oklns("Creating DUMP of local database");
-    } else {
-      grunt.log.oklns("Creating DUMP of remote database");
-      var tpl_ssh = grunt.template.process(tpls.ssh, {
-        data: {
-          host: config.ssh_host
-        }
-      });
-      cmd = tpl_ssh + " '" + cmd + "'";
-    }
-
-    return cmd;
-  };
-
-  exports.mysql_cmd = function(config, src) {
-    var cmd = grunt.template.process(tpls.mysql, {
-      data: {
-        host: config.host,
-        user: config.user,
-        pass: config.pass,
-        database: config.database,
-        path: src
-      }
-    });
-
-    if (typeof config.ssh_host === "undefined") {
-      grunt.log.oklns("Importing DUMP into local database");
-      cmd = cmd + " < " + src;
-    } else {
-      var tpl_ssh = grunt.template.process(tpls.ssh, {
-        data: {
-          host: config.ssh_host
-        }
-      });
-
-      grunt.log.oklns("Importing DUMP into remote database");
-      cmd = tpl_ssh + " '" + cmd + "' < " + src;
-    }
-
-    return cmd;
-  };
-
-  exports.rsync_push_cmd = function(config) {
-    var cmd = grunt.template.process(tpls.rsync_push, {
-      data: {
-        rsync_args: config.rsync_args,
-        ssh_host: config.ssh_host,
-        from: config.from,
-        to: config.to,
-        exclusions: config.exclusions
-      }
-    });
-
-    return cmd;
-  };
-
-  exports.rsync_pull_cmd = function(config) {
-    var cmd = grunt.template.process(tpls.rsync_pull, {
-      data: {
-        rsync_args: config.rsync_args,
-        ssh_host: config.ssh_host,
-        from: config.from,
-        to: config.to,
-        exclusions: config.exclusions
-      }
-    });
-
-    return cmd;
-  };
-
-  var tpls = {
-    backup_path: "<%= backups_dir %>/<%= env %>/<%= date %>/<%= time %>",
-    mysqldump: "mysqldump -h <%= host %> -u<%= user %> -p<%= pass %> <%= database %>",
-    mysql: "mysql -h <%= host %> -u <%= user %> -p<%= pass %> <%= database %>",
-    rsync_push: "rsync <%= rsync_args %> --delete -e 'ssh <%= ssh_host %>' <%= exclusions %> <%= from %> :<%= to %>",
-    rsync_pull: "rsync <%= rsync_args %> -e 'ssh <%= ssh_host %>' <%= exclusions %> :<%= from %> <%= to %>",
-    ssh: "ssh <%= host %>",
-  };
-
-  return exports;
+    util.rsync_pull(config);
+  });
 };
