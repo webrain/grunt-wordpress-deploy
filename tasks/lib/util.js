@@ -220,8 +220,8 @@ exports.init = function (grunt) {
 
   var tpls = {
     backup_path: "<%= backups_dir %>/<%= env %>/<%= date %>/<%= time %>",
-    mysqldump: "mysqldump -h <%= host %> -u<%= user %> -p<%= pass %> <%= database %>",
-    mysql: "mysql -h <%= host %> -u <%= user %> -p<%= pass %> <%= database %>",
+    mysqldump: "MYSQL_PWD=<%= pass %> mysqldump -h <%= host %> -u<%= user %> <%= database %>",
+    mysql: "MYSQL_PWD=<%= pass %> mysql -h <%= host %> -u <%= user %> <%= database %>",
     rsync_push: "rsync <%= rsync_args %> --delete -e 'ssh <%= ssh_host %>' <%= exclusions %> <%= from %> :<%= to %>",
     rsync_pull: "rsync <%= rsync_args %> -e 'ssh <%= ssh_host %>' <%= exclusions %> :<%= from %> <%= to %>",
     ssh: "ssh <%= host %>",
