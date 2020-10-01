@@ -1,10 +1,10 @@
-# Grunt Wordpress Deployments
+# Grunt Wordpress Deployments Announcement:
 
 The project is searching for a new maintainer.
 If anybody is interested please let us know (@ingo86 or @davidthou).
 Thanks.
 
-# Instructions
+# Instructions:
 
 Deploy a Wordpress instance without pain using Grunt.
 
@@ -16,7 +16,7 @@ Here's a tour of the features:
 * Push and pull files with rsync.
 * Completely based on Javascript, leverages only on some common system tools to perform the tasks (`mysql`, `mysqldump`, `ssh`).
 
-## Requirements
+## Requirements:
 
 This plugin requires:
 
@@ -27,7 +27,7 @@ This plugin requires:
 
 To be able to use this plugin it's important to have access to the remote machine through `ssh`, with ssh key authentication to avoid password entering during the tasks. As this is a different topic we will not cover it here but you might like to start by reading [Github's own advice](https://help.github.com/articles/generating-ssh-keys).
 
-## Getting started
+## Let's Gets started:
 
 This is a [Grunt](http://gruntjs.com/) plugin, so it requires Grunt. It's really easy to install, as explained into the [Getting Started](http://gruntjs.com/getting-started) guide. Please read the guide to understand how does this works.
 
@@ -87,7 +87,7 @@ module.exports = function(grunt) {
 
 In the example above we define two environments, one is mandatory and is always called `local`, another is optional and can be called the way you want. In this case we have defined a second environment called `staging`.
 
-## Available tasks
+## Available tasks:-
 
 The plugin defines a serie of tasks. Here's a brief overview:
 
@@ -96,7 +96,7 @@ The plugin defines a serie of tasks. Here's a brief overview:
 * `grunt push_files --target=environment_name`: Push the local files to the specified environment, using rsync.
 * `grunt pull_files --target=environment_name`: Pull the files from the specified environment to the local environment, using rsync.
 
-### Push_db
+### Push_db:
 
 Example execution: `grunt push_db --target=staging`
 
