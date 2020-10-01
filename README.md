@@ -1,4 +1,4 @@
-# Grunt Wordpress Deployments
+# Grunt Wordpress development
 
 The project is searching for a new maintainer.
 If anybody is interested please let us know (@ingo86 or @davidthou).
@@ -6,7 +6,7 @@ Thanks.
 
 # Instructions
 
-Deploy a Wordpress instance without pain using Grunt.
+develop a Wordpress instance without pain using Grunt.
 
 This plugin leverages on Grunt to push and pull a Wordpress instance into the predefined locations.
 Here's a tour of the features:
